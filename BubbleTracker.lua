@@ -1,22 +1,28 @@
-local EventFrame = CreateFrame("frame", "EventFrame")
-EventFrame:RegisterEvent("PLAYER_XP_UPDATE")
+-- Create a frame for the bubble count display
+local bubbleFrame = CreateFrame("Frame", nil, UIParent)
+bubbleFrame:SetSize(100, 40)
+bubbleFrame:SetPoint("CENTER", 0, 0)
+bubbleFrame:SetMovable(true)
+bubbleFrame:EnableMouse(true)
+bubbleFrame:RegisterForDrag("LeftButton")
+bubbleFrame:SetScript("OnDragStart", bubbleFrame.StartMoving)
+bubbleFrame:SetScript("OnDragStop", bubbleFrame.StopMovingOrSizing)
 
-local currentBubbleCount = math.ceil((UnitXPMax("player") - UnitXP("player")) / (UnitXP("player") / 20))
+-- Create a text object to display the bubble count
+local bubbleText = bubbleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+bubbleText:SetAllPoints()
+bubbleText:SetText("0/20")
 
---RUN A TEST TO SEE IF LOGGING OUT IS SUFFICIENT OR IF YOU NEED TO EXIT THE CLIENT EACH TIME
+-- Update the bubble count
+local function UpdateBubbleCount()
+  local playerXP = UnitXP("player")
+  local playerMaxXP = UnitXPMax("player")
+  local remainingXP = playerMaxXP - playerXP
+  local totalBubbles = math.ceil(remainingXP / (playerMaxXP / 20))
+  bubbleText:SetText(totalBubbles .. "/20 remaining.")
+end
 
-EventFrame:SetScript("OnEvent", function(self, event, ...)
-  if event == "PLAYER_XP_UPDATE" then
-    local playerXP = UnitXP("player")
-    local playerMaxXP = UnitXPMax("player")
-    local remainingXP = playerMaxXP - playerXP
-    local totalBubbles = math.ceil(remainingXP / (playerMaxXP / 20))
-
-    if currentBubbleCount ~= totalBubbles then
-      currentBubbleCount = totalBubbles
-      print("You got XP, nice.")
-      message("You have passed another bubble.")
-    end
-  end
-end)
-
+-- Register for the event and update the bubble count on PLAYER_XP_UPDATE
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("PLAYER_XP_UPDATE")
+frame:SetScript("OnEvent", UpdateBubbleCount)
